@@ -2,7 +2,7 @@ import numpy as np
 import modern_robotics as mr
 import csv
 
-def FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp, Ki, dt=0.01):
+def FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp=0, Ki=0, dt=0.01):
 
     Kp = Kp * np.identity(6)
     Ki = Ki * np.identity(6)
@@ -10,7 +10,7 @@ def FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp, Ki, dt=0.01):
 
     Vd =  mr.se3ToVec((1/dt) * mr.MatrixLog6((mr.TransInv(Tse_d) @ Tse_d_next)))
 
-    V_ee = (mr.Adjoint(mr.TransInv(Tse) @ Tse_d) @ Vd) #+ (Kp @ Tse_error) + (Ki @ Tse_error_int)
+    V_ee = (mr.Adjoint(mr.TransInv(Tse) @ Tse_d) @ Vd) + (Kp @ Tse_error) + (Ki @ Tse_error_int)
 
     Tse_error_int_new = Tse_error * dt + Tse_error_int
 
@@ -42,11 +42,6 @@ def FindTse(currentConfig, Tb0, M0e, BList):
     Ts0 = np.matmul(Tsb, Tb0)
     Tse = np.matmul(Ts0, T0e)
 
-    print(Tsb)
-    print(T0e)
-    print(Ts0)
-    print(Tse)
-
     return Tse, Tb0, T0e
 
 
@@ -74,7 +69,7 @@ def FindTse(currentConfig, Tb0, M0e, BList):
 #                 [0, 0, 1, 0.6546],
 #                 [0, 0, 0, 1]
 #                 ])
-# Blist = np.array([[0, 0, 1, 0, 0.033, 0],
+# BList = np.array([[0, 0, 1, 0, 0.033, 0],
 #                     [0, -1, 0, -0.5076, 0, 0],
 #                     [0, -1, 0, -0.3526, 0, 0],
 #                     [0, -1, 0, -0.2176, 0, 0],
@@ -83,18 +78,23 @@ def FindTse(currentConfig, Tb0, M0e, BList):
 # Ki = 0
 # Tse_error_int_init = 0
 
+# l = 0.235       # the distance from the center of the robot to the front/rear axle (see p.521 of Modern Robotics)
+# w = 0.15        # the distance from the center of the robot to the LH/RH wheel centerline (see p.521 of Modern Robotics)
+# r = 0.0475      # the wheel radii
 
-# Tse, Tb0, T0e = FindTse(currentConfig, Tb0, M0e, Blist)
+# base_geometry = (r / 4) * np.array([[0, 0, 0, 0],
+#                                     [0, 0, 0, 0],
+#                                     [-1.0/(l+w), 1.0/(l+w), 1.0/(l+w), -1.0/(l+w)],
+#                                     [    1.0    ,     1.0  ,     1.0  ,     1.0   ],
+#                                     [   -1.0    ,     1.0  ,    -1.0  ,     1.0   ],
+#                                     [0, 0, 0, 0]])
+
+# Tse, Tb0, T0e = FindTse(currentConfig, Tb0, M0e, BList)
 # V_ee, Tse_error, Tse_error_int_new = FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int_init, Kp, Ki)
-# print('V_ee')
-# print(V_ee)
-# print('Tse_error')
-# print(Tse_error)
-# print('Tse_error_int_new')
-# print(Tse_error_int_new)
 
-
-# # Jacobian of arm
-# J_arm = mr.JacobianBody(Blist, currentConfig[3:-1])
-# J_base = mr.Adjoint(np.linalg.pinv(T0e) @ np.linalg.pinv(Tb0)) @ F6
-# Je = np.hstack((J_base, J_arm))
+# thetaList = currentConfig[3:8]
+# J_arm = mr.JacobianBody(BList, thetaList)
+# J_base = mr.Adjoint(np.linalg.pinv(T0e) @ np.linalg.pinv(Tb0)) @ base_geometry
+# J = np.hstack((J_base, J_arm))
+# J_inv = np.linalg.pinv(J)
+# speedCommands = J_inv @ V_ee

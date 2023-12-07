@@ -18,9 +18,10 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
     """
 
     # Define standoff ans grasp Transformations relative to cube
-    Tce_grasp = np.array([[0,0,1,0],
+    angle_grasp = 2
+    Tce_grasp = np.array([[np.cos(angle_grasp), 0, np.sin(angle_grasp), 0],
                         [0,1,0,0],
-                        [-1,0,0,0],
+                        [-np.sin(angle_grasp),0,np.cos(angle_grasp),0],
                         [0,0,0,1]
                         ])
     Tce_standoff = np.array([[0,0,1,0],
