@@ -6,13 +6,13 @@ def NextState(currentConfig, currentSpeeds, dt=0.01, maxAngSpeed=2*np.pi):
     """
     Decription:
         Predicts the next state of the robot based on the current state and current joint velocities
-    Inputs:
-        • currentConfig: The current configuration of the robot: [phi_b, x_b, y_b, armjoint1, armjoint2, armjoint3, armjoint4, armjoint5, wheel1, wheel2, wheel3, wheel4, gripper_state]
-        • currentSpeeds: The current rotational speeds of each joint: [armjoint1_vel, armjoint2_vel, armjoint3_vel, armjoint4_vel, armjoint5_vel, wheel1_vel, wheel2_vel, wheel3_vel, wheel4_vel]
+    Args:
+        • currentConfig: The current configuration of the robot ([phi_b, x_b, y_b, armjoint1, armjoint2, armjoint3, armjoint4, armjoint5, wheel1, wheel2, wheel3, wheel4, gripper_state])
+        • currentSpeeds: The current rotational speeds of each joint ([armjoint1_vel, armjoint2_vel, armjoint3_vel, armjoint4_vel, armjoint5_vel, wheel1_vel, wheel2_vel, wheel3_vel, wheel4_vel])
         • dt: The simulation timestep (float)
         • maxAngSpeed: The maximum rotational speed of all joints and wheels (float)
-    Outputs:
-        • newConfig: The new configuration of the robot: [phi_b, x_b, y_b, armjoint1, armjoint2, armjoint3, armjoint4, armjoint5, wheel1, wheel2, wheel3, wheel4, gripper_state]
+    Returns:
+        • newConfig: The new configuration of the robot ([phi_b, x_b, y_b, armjoint1, armjoint2, armjoint3, armjoint4, armjoint5, wheel1, wheel2, wheel3, wheel4, gripper_state])
     """
 
     l = 0.235       # the distance from the center of the robot to the front/rear axle (see p.521 of Modern Robotics)
@@ -55,36 +55,37 @@ def write_to_csv(array, file_name):
     """
     Decription:
         Writes an array to a csv file
-    Inputs:
+    Args:
         • array: The array to be written to the file
         • file_name: The filename to be used
     """
+    print("Writing to CSV file %s" % (file_name))
     with open(file_name, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(array)
 
 
-u1 = np.array([0, 0, 0, 0, 0, 10, 10, 10, 10])
-u2 = np.array([0, 0, 0, 0, 0, -10, 10, -10, 10])
-u3 = np.array([0, 0, 0, 0, 0, -10, 10, 10 , -10])
+# u1 = np.array([0, 0, 0, 0, 0, 10, 10, 10, 10])
+# u2 = np.array([0, 0, 0, 0, 0, -10, 10, -10, 10])
+# u3 = np.array([0, 0, 0, 0, 0, -10, 10, 10 , -10])
 
-config = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+# config = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
-time = 0.0
-dt = 0.01
+# time = 0.0
+# dt = 0.01
 
-filename = 'Ferro_Stephen_milestone1.csv'
-configArray = np.array(config)
+# filename = 'Ferro_Stephen_milestone1.csv'
+# configArray = np.array(config)
 
-joint_vel_limit = 10
+# joint_vel_limit = 10
 
-maxTime = 1
+# maxTime = 1
 
-while time <= maxTime:
-    config = NextState(config, u3, dt, joint_vel_limit)
-    configArray = np.vstack((configArray, config))
-    time += dt
+# while time <= maxTime:
+#     config = NextState(config, u3, dt, joint_vel_limit)
+#     configArray = np.vstack((configArray, config))
+#     time += dt
 
-print(configArray)
-write_to_csv(configArray, filename)
+# print("Final Configuration: %s" % (configArray[-1]))
+# write_to_csv(configArray, filename)
 
