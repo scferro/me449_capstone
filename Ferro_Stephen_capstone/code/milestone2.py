@@ -35,10 +35,10 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
     numPoints = timeMove / (0.01 / k)
 
     # Generate transformation matrices relative to the spaceframe for each position of the gripper
-    Tse_standoff_init = np.matmul(Tsc_init, Tce_standoff)
-    Tse_grasp_init = np.matmul(Tsc_init, Tce_grasp)
-    Tse_standoff_final = np.matmul(Tsc_final, Tce_standoff)
-    Tse_grasp_final = np.matmul(Tsc_final, Tce_grasp)
+    Tse_standoff_init = Tsc_init @ Tce_standoff
+    Tse_grasp_init = Tsc_init @ Tce_grasp
+    Tse_standoff_final = Tsc_final @ Tce_standoff
+    Tse_grasp_final = Tsc_final @ Tce_grasp
     
     # Find the trajectory from the home position to the standoff from the cube at its initial position 
     traj1 = extract_variables(mr.CartesianTrajectory(Tse_init, Tse_standoff_init, timeMove, numPoints, 5), 0)

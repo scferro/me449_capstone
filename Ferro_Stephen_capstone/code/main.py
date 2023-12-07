@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import modern_robotics as mr
 import csv
 import time
@@ -8,30 +9,31 @@ from milestone3 import FeedbackControl, FindTse
 
 ### INPUTS ###
 
-Tse_d_init = np.array([[0,0,1,0],
-                    [0,1,0,0],
-                    [-1,0,0,0.5],
-                    [0,0,0,1]
+Tse_d_init = np.array([[0, 0, 1, 0],
+                    [0, 1, 0, 0],
+                    [-1, 0, 0, 0.5],
+                    [0, 0, 0, 1]
                     ])
-Tsc_init = np.array([[1,0,0,1],
-                    [0,1,0,0],
-                    [0,0,1,0.025],
-                    [0,0,0,1]
+Tsc_init = np.array([[1, 0, 0, 1],
+                    [0, 1, 0, 0],
+                    [0, 0, 1, 0.025],
+                    [0, 0, 0, 1]
                     ])
-Tsc_final = np.array([[0,1,0,0],
-                    [-1,0,0,-1],
-                    [0,0,1,0.025],
-                    [0,0,0,1]
+Tsc_final = np.array([[0, 1, 0, 0],
+                    [-1, 0, 0, -1],
+                    [0, 0, 1, 0.025],
+                    [0, 0, 0, 1]
                     ])
-initial_config = np.array([0.5, 1, -1,
+initial_config = np.array([0, 1, 0,
                             0, 0, 0, 0, 0,
-                            0, 0.2, -1.6, 0,
+                            0, 0, 0, 0,
                             0])
 
-Kp = 5
+Kp = 10
 Ki = 0.1
 
 filename_csv = 'Ferro_Stephen_capstone.csv'
+filename_dat = 'Ferro_Stephen_capstone.dat'
 
 ### ROBOT CONFIGURATION VARIABLES ###
 
@@ -65,55 +67,102 @@ base_geometry = (r / 4) * np.array([[0, 0, 0, 0],
 
 ### MAIN CODE ###
 
+# Generate the goal trajectory
 target_trajectory = TrajectoryGenerator(Tse_d_init, Tsc_init, Tsc_final)
-
 write_to_csv(target_trajectory, 'traj.csv')
 
-Tse, Tb0, T0e = FindTse(initial_config, Tb0, M0e, BList)
+# Set the current configuration equal to the intial_config
 config = initial_config
 
+# Initialize error data integral and array
 Tse_error_int = [0, 0, 0, 0, 0, 0]
-Tse_error_vector = []
+Tse_error_array = np.array([0, 0, 0, 0, 0, 0])
 config_array = np.array([config])
-speed_array = np.array([0,0,0,0,0,0,0,0,0])
 
 count = 0
 max = len(target_trajectory)
 
+# Interate through trajectory commands
 while count < (max - 1):
-    config_d = target_trajectory[count]
-    config_d_next = target_trajectory[count+1]
+    # Determien the current and next desired poses
+    Tse_vec_d = target_trajectory[count]
+    Tse_vec_d_next = target_trajectory[count+1]
 
-    Tse_d = np.array([[config_d[0], config_d[1], config_d[2], config_d[9]], 
-                       [config_d[3], config_d[4], config_d[5], config_d[10]], 
-                       [config_d[6], config_d[7], config_d[8], config_d[11]],
-                       [0, 0, 0, 1]])
-    Tse_d_next = np.array([[config_d_next[0], config_d_next[1], config_d_next[2], config_d_next[9]], 
-                       [config_d_next[3], config_d_next[4], config_d_next[5], config_d_next[10]], 
-                       [config_d_next[6], config_d_next[7], config_d_next[8], config_d_next[11]],
-                       [0, 0, 0, 1]])
-    
-    V_ee, Tse_error, Tse_error_int = FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp, Ki)
+    # Convert configurations to transforms
+    Tse, T0e = FindTse(config, Tb0, M0e, BList)
+    Tse_d = np.array([[Tse_vec_d[0], Tse_vec_d[1], Tse_vec_d[2], Tse_vec_d[9]],
+                      [Tse_vec_d[3], Tse_vec_d[4], Tse_vec_d[5], Tse_vec_d[10]],
+                      [Tse_vec_d[6], Tse_vec_d[7], Tse_vec_d[8], Tse_vec_d[11]],
+                      [0, 0, 0, 1]
+                      ])
+    Tse_d_next = np.array([[Tse_vec_d_next[0], Tse_vec_d_next[1], Tse_vec_d_next[2], Tse_vec_d_next[9]],
+                            [Tse_vec_d_next[3], Tse_vec_d_next[4], Tse_vec_d_next[5], Tse_vec_d_next[10]],
+                            [Tse_vec_d_next[6], Tse_vec_d_next[7], Tse_vec_d_next[8], Tse_vec_d_next[11]],
+                            [0, 0, 0, 1]
+                            ])
+            
+    # Calculate EE twist using FeedbackControl
+    V_ee, Tse_error, Tse_error_int_new = FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp, Ki)
+    Tse_error_int = Tse_error_int_new
 
+    # Find the Jacobian of the robot
     thetaList = config[3:8]
     J_base = mr.Adjoint(np.linalg.pinv(T0e) @ np.linalg.pinv(Tb0)) @ base_geometry
     J_arm = mr.JacobianBody(BList, thetaList)
     J = np.hstack((J_base, J_arm))
 
-    J_inv = np.linalg.pinv(J)
-    speedCommands = J_inv @ V_ee
+    # Calculate speed commands based on Jacobian and V_ee
+    speedCommands = np.linalg.pinv(J) @ V_ee
+    wheelSpeeds = speedCommands[0:4]
+    jointSpeeds = speedCommands[4:]
 
-    config = NextState(config, speedCommands, config_d[-1])
+    # Find the new robot configuration using NewState
+    new_config = NextState(config, wheelSpeeds, jointSpeeds, Tse_vec_d[-1])
+    config = new_config
 
     config_array = np.vstack((config_array, config))
-    speed_array = np.vstack((speed_array, speedCommands))
-
-    Tse_error_vector.append(Tse_error)
+    Tse_error_array = np.vstack((Tse_error_array, Tse_error))
 
     count += 1
-    print(count)
     
 write_to_csv(config_array, filename_csv)
-write_to_csv(speed_array, 'speeds.csv')
-write_to_csv(Tse_error_vector, 'error.csv')
+print('Writing error file to ' + filename_dat)
+Tse_error_array.tofile(filename_dat, sep=" ", format="%s")
+
+
+# Generate x axis data
+x = np.linspace(0, (max)*0.01, (max))
+
+# Define functions for y values
+y1 = []
+y2 = []
+y3 = []
+y4 = []
+y5 = []
+y6 = []
+
+for vector in Tse_error_array:
+    y1.append(vector[0])
+    y2.append(vector[1])
+    y3.append(vector[2])
+    y4.append(vector[3])
+    y5.append(vector[4])
+    y6.append(vector[5])
+
+# Plot the six lines on the chart
+plt.plot(x, y1, label='Pitch Error (rad)')
+plt.plot(x, y2, label='Roll Error (rad)')
+plt.plot(x, y3, label='Yaw Error (rad)')
+plt.plot(x, y4, label='x Error (m)')
+plt.plot(x, y5, label='y Error (m)')
+plt.plot(x, y6, label='z Error (m)')
+
+# Add labels and a legend
+plt.xlabel('Time (s)')
+plt.ylabel('Error')
+plt.title('End Effoector Pose Error vs Time')
+plt.legend()
+
+# Show the plot
+plt.show()
 
