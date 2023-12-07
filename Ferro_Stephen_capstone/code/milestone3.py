@@ -25,6 +25,7 @@ def FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp_in=0, Ki_in=0, dt=
 
     # Calculate Tse error based on current and desired EE pose
     Tse_error = mr.se3ToVec(mr.MatrixLog6(mr.TransInv(Tse) @ Tse_d))
+    print(Tse_error)
 
     # Calculate EE twist
     Vd =  (1/dt) * mr.se3ToVec(mr.MatrixLog6((mr.TransInv(Tse_d) @ Tse_d_next)))
@@ -68,6 +69,51 @@ def FindTse(currentConfig, Tb0, M0e, BList):
     Tse = Tsb @ Tb0 @ T0e
 
     return Tse, T0e
+
+
+def CheckJointLimits(jointAngles, jointSpeeds, J, dt=0.01):
+    """
+    Decription:
+        Limits over rotation of robot joints
+    Args:
+        • jointAngles: The joint angles of the arm
+        • jointSpeeds: The commanded speeds of the joints
+        • J: The Jacobian of the robot
+        • dt: The time step
+    Returns:
+        • J: The updated Jacobian with 0s on the joints that are limited
+    """
+    # Define joint limits
+    limit1 = np.array([-np.pi/2, np.pi/2])
+    limit2 = np.array([-np.pi/2, 0.2])
+    limit3 = np.array([-np.pi/2, 0.2])
+    limit4 = np.array([-3*np.pi/4, 3*np.pi/4])
+    
+    # Calculate the new joint angles using the current angles and speeds
+    newAngles = jointAngles + (jointSpeeds * dt)
+
+    J_new_check = False
+
+    if (newAngles[0] > limit1[1]) or (newAngles[0] < limit1[0]):
+        for i in range(5):
+                J[i,4] = 0
+                J_new_check = True
+    if (newAngles[1] > limit2[1]) or (newAngles[1] < limit2[0]):
+        for i in range(5):
+                J[i,5] = 0
+                J_new_check = True
+    if (newAngles[2] > limit3[1]) or (newAngles[2] < limit3[0]):
+        for i in range(5):
+                J[i,6] = 0
+                J_new_check = True
+    if (newAngles[3] > limit4[1]) or (newAngles[3] < limit4[0]):
+        for i in range(5):
+                J[i,7] = 0
+                J_new_check = True
+
+    return J, J_new_check 
+
+
 
 
 ### UNCOMMENT CODE BELOW FOR TESTING ###

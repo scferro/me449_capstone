@@ -71,6 +71,8 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
 
     # Combine the individual trajectories into a single output trajectory
     traj_out = np.vstack((traj1, traj2, traj3, traj4, traj5, traj6, traj7, traj8))
+
+    #write_to_csv(traj_out,'traj.csv')
     
     return traj_out
 
@@ -87,7 +89,7 @@ def extract_variables(T, gripper_var):
     output = []
     for array in T:
         # Add variables from transformation matrix to a vector and add the vector to the output list of vectors
-        vec = [array[0][0], array[0][1], array[0][2], array[1][0], array[1][1], array[1][2], array[2][0], array[2][1], array[2][2], array[0][3], array[1][3], array[2][3], gripper_var]
+        vec = [array[0,0], array[0,1], array[0,2], array[1,0], array[1,1], array[1,2], array[2,0], array[2,1], array[2,2], array[0,3], array[1,3], array[2,3], gripper_var]
         output.append(vec)
     return output
 
@@ -107,28 +109,28 @@ def write_to_csv(array, file_name):
 
 ### UNCOMMENT CODE BELOW FOR TESTING ###
 
-# # Initialize Transformaations
+# Initialize Transformaations
 
-# Tse_init = np.array([[0,0,1,0],
-#                     [0,1,0,0],
-#                     [-1,0,0,0.5],
-#                     [0,0,0,1]
-#                     ])
-# Tsc_init = np.array([[1,0,0,1],
-#                     [0,1,0,0],
-#                     [0,0,1,0.025],
-#                     [0,0,0,1]
-#                     ])
-# Tsc_final = np.array([[0,1,0,0],
-#                     [-1,0,0,-1],
-#                     [0,0,1,0.025],
-#                     [0,0,0,1]
-#                     ])
+Tse_init = np.array([[0,0,1,0],
+                    [0,1,0,0],
+                    [-1,0,0,0.5],
+                    [0,0,0,1]
+                    ])
+Tsc_init = np.array([[1,0,0,1],
+                    [0,1,0,0],
+                    [0,0,1,0.025],
+                    [0,0,0,1]
+                    ])
+Tsc_final = np.array([[0,1,0,0],
+                    [-1,0,0,-1],
+                    [0,0,1,0.025],
+                    [0,0,0,1]
+                    ])
 
-# # Plan trajectory using TrajectoryGenerator() function
+# Plan trajectory using TrajectoryGenerator() function
 
-# traj = TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final)
+traj = TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final)
 
-# print(traj)
+print(traj)
     
 

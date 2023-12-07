@@ -5,7 +5,7 @@ import csv
 import time
 from milestone1 import NextState, write_to_csv
 from milestone2 import TrajectoryGenerator
-from milestone3 import FeedbackControl, FindTse
+from milestone3 import FeedbackControl, FindTse, CheckJointLimits
 
 ### INPUTS ###
 
@@ -24,16 +24,16 @@ Tsc_final = np.array([[0, 1, 0, 0],
                     [0, 0, 1, 0.025],
                     [0, 0, 0, 1]
                     ])
-initial_config = np.array([0, 1, 0,
-                            0, 0, 0, 0, 0,
+initial_config = np.array([0, -1, 0,
+                            0, 0, -1, -1, 0,
                             0, 0, 0, 0,
                             0])
 
-Kp = 10
-Ki = 0.1
+Kp = 0
+Ki = 0
 
-filename_csv = 'Ferro_Stephen_capstone.csv'
-filename_dat = 'Ferro_Stephen_capstone.dat'
+filename_traj = 'Ferro_Stephen_capstone_traj.csv'
+filename_error = 'Ferro_Stephen_capstone_error.csv'
 
 ### ROBOT CONFIGURATION VARIABLES ###
 
@@ -69,13 +69,12 @@ base_geometry = (r / 4) * np.array([[0, 0, 0, 0],
 
 # Generate the goal trajectory
 target_trajectory = TrajectoryGenerator(Tse_d_init, Tsc_init, Tsc_final)
-write_to_csv(target_trajectory, 'traj.csv')
 
 # Set the current configuration equal to the intial_config
 config = initial_config
 
 # Initialize error data integral and array
-Tse_error_int = [0, 0, 0, 0, 0, 0]
+Tse_error_int = np.array([0, 0, 0, 0, 0, 0])
 Tse_error_array = np.array([0, 0, 0, 0, 0, 0])
 config_array = np.array([config])
 
@@ -116,18 +115,28 @@ while count < (max - 1):
     wheelSpeeds = speedCommands[0:4]
     jointSpeeds = speedCommands[4:]
 
+    # CheckJointLimits and update Jacobian
+    J_new, J_new_check = CheckJointLimits(config[3:8], jointSpeeds, J)
+
+    # Calculate speed commands based on Jacobian and V_ee if joints are at limit
+    if J_new_check == True:
+        speedCommands = np.linalg.pinv(J_new) @ V_ee
+        wheelSpeeds = speedCommands[0:4]
+        jointSpeeds = speedCommands[4:]
+        J_new_check = False
+
     # Find the new robot configuration using NewState
     new_config = NextState(config, wheelSpeeds, jointSpeeds, Tse_vec_d[-1])
     config = new_config
 
     config_array = np.vstack((config_array, config))
+    print(Tse_error)
     Tse_error_array = np.vstack((Tse_error_array, Tse_error))
 
     count += 1
-    
-write_to_csv(config_array, filename_csv)
-print('Writing error file to ' + filename_dat)
-Tse_error_array.tofile(filename_dat, sep=" ", format="%s")
+
+write_to_csv(config_array, filename_traj)
+write_to_csv(config_array, filename_error)
 
 
 # Generate x axis data
