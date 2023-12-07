@@ -2,7 +2,7 @@ import numpy as np
 import modern_robotics as mr
 import csv
 
-def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, Tce_grasp, Tce_standoff, k=1):
+def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
     """
     Decription:
         Generate a trajectory for the robot arm to grasp a cube and move it to a new position
@@ -16,6 +16,18 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, Tce_grasp, Tce_standoff, 
     Returns:
         • traj_out: A list of rotation and position vectors for each point of the robot's full trajectory (list of lists)
     """
+
+    # Define standoff ans grasp Transformations relative to cube
+    Tce_grasp = np.array([[0,0,1,0],
+                        [0,1,0,0],
+                        [-1,0,0,0],
+                        [0,0,0,1]
+                        ])
+    Tce_standoff = np.array([[0,0,1,0],
+                        [0,1,0,0],
+                        [-1,0,0,0.5],
+                        [0,0,0,1]
+                        ])
 
     # Set movement time for each action and the number of points to be calculated for each motion
     timeMove = 2
@@ -58,9 +70,7 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, Tce_grasp, Tce_standoff, 
 
     # Combine the individual trajectories into a single output trajectory
     traj_out = np.vstack((traj1, traj2, traj3, traj4, traj5, traj6, traj7, traj8))
-
-    # Write trajectory to CSV and return it
-    write_to_csv(traj_out, 'trajectory.csv')
+    
     return traj_out
 
 def extract_variables(T, gripper_var):
@@ -94,6 +104,8 @@ def write_to_csv(array, file_name):
         writer.writerows(array)
 
 
+### UNCOMMENT CODE BELOW FOR TESTING ###
+
 # # Initialize Transformaations
 
 # Tse_init = np.array([[0,0,1,0],
@@ -111,20 +123,10 @@ def write_to_csv(array, file_name):
 #                     [0,0,1,0.025],
 #                     [0,0,0,1]
 #                     ])
-# Tce_grasp = np.array([[0,0,1,0],
-#                     [0,1,0,0],
-#                     [-1,0,0,0],
-#                     [0,0,0,1]
-#                     ])
-# Tce_standoff = np.array([[0,0,1,0],
-#                     [0,1,0,0],
-#                     [-1,0,0,0.5],
-#                     [0,0,0,1]
-#                     ])
 
 # # Plan trajectory using TrajectoryGenerator() function
 
-# traj = TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, Tce_grasp, Tce_standoff)
+# traj = TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final)
 
 # print(traj)
     

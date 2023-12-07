@@ -6,16 +6,15 @@ def FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp, Ki, dt=0.01):
 
     Kp = Kp * np.identity(6)
     Ki = Ki * np.identity(6)
-
     Tse_error = mr.se3ToVec(mr.MatrixLog6(mr.TransInv(Tse) @ Tse_d))
 
     Vd =  mr.se3ToVec((1/dt) * mr.MatrixLog6((mr.TransInv(Tse_d) @ Tse_d_next)))
 
-    V_ee = (mr.Adjoint(mr.TransInv(Tse) @ Tse_d) @ Vd) + (Kp @ Tse_error) + (Ki @ Tse_error_int)
+    V_ee = (mr.Adjoint(mr.TransInv(Tse) @ Tse_d) @ Vd) #+ (Kp @ Tse_error) + (Ki @ Tse_error_int)
 
     Tse_error_int_new = Tse_error * dt + Tse_error_int
 
-    return V_ee, Tse_error_int_new
+    return V_ee, Tse_error, Tse_error_int_new
 
 
 def FindTse(currentConfig, Tb0, M0e, BList):
@@ -43,8 +42,15 @@ def FindTse(currentConfig, Tb0, M0e, BList):
     Ts0 = np.matmul(Tsb, Tb0)
     Tse = np.matmul(Ts0, T0e)
 
+    print(Tsb)
+    print(T0e)
+    print(Ts0)
+    print(Tse)
+
     return Tse, Tb0, T0e
 
+
+### UNCOMMENT CODE BELOW FOR TESTING ###
 
 # currentConfig = [0, 0, 0, 0, 0, 0.2, -1.6, 0]
 
@@ -63,7 +69,6 @@ def FindTse(currentConfig, Tb0, M0e, BList):
 #                 [0, 0, 1, 0.0026],
 #                 [0, 0, 0, 1]
 #                 ])
-
 # M0e = np.array([[1, 0, 0, 0.033],
 #                 [0, 1, 0, 0],
 #                 [0, 0, 1, 0.6546],
@@ -80,7 +85,7 @@ def FindTse(currentConfig, Tb0, M0e, BList):
 
 
 # Tse, Tb0, T0e = FindTse(currentConfig, Tb0, M0e, Blist)
-# V_ee, Tse_error_int_new = FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int_init, Kp, Ki)
+# V_ee, Tse_error, Tse_error_int_new = FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int_init, Kp, Ki)
 # print('V_ee')
 # print(V_ee)
 # print('Tse_error')

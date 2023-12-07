@@ -2,13 +2,13 @@ import numpy as np
 import modern_robotics as mr
 import csv
 
-def NextState(currentConfig, currentSpeeds, dt=0.01, maxAngSpeed=2*np.pi):
+def NextState(currentConfig, speedCommands, newGripperState, dt=0.01, maxAngSpeed=2*np.pi):
     """
     Decription:
         Predicts the next state of the robot based on the current state and current joint velocities
     Args:
         • currentConfig: The current configuration of the robot ([phi_b, x_b, y_b, armjoint1, armjoint2, armjoint3, armjoint4, armjoint5, wheel1, wheel2, wheel3, wheel4, gripper_state])
-        • currentSpeeds: The current rotational speeds of each joint ([armjoint1_vel, armjoint2_vel, armjoint3_vel, armjoint4_vel, armjoint5_vel, wheel1_vel, wheel2_vel, wheel3_vel, wheel4_vel])
+        • speedCommands: The current rotational speeds of each joint ([armjoint1_vel, armjoint2_vel, armjoint3_vel, armjoint4_vel, armjoint5_vel, wheel1_vel, wheel2_vel, wheel3_vel, wheel4_vel])
         • dt: The simulation timestep (float)
         • maxAngSpeed: The maximum rotational speed of all joints and wheels (float)
     Returns:
@@ -21,7 +21,7 @@ def NextState(currentConfig, currentSpeeds, dt=0.01, maxAngSpeed=2*np.pi):
 
     limitedSpeeds = np.array([])
 
-    for speed in currentSpeeds:
+    for speed in speedCommands:
         if speed > maxAngSpeed:
             speed = maxAngSpeed
         elif speed < maxAngSpeed:
@@ -46,7 +46,7 @@ def NextState(currentConfig, currentSpeeds, dt=0.01, maxAngSpeed=2*np.pi):
     newConfig = np.array([currentConfig[0]+chassisChange[0], currentConfig[1]+chassisChange[1], currentConfig[2]+chassisChange[2],                                                  # chassis state: phi, x, y 
                         currentConfig[3], currentConfig[4], currentConfig[5], currentConfig[6], currentConfig[7],                                                                   # arm joint positions: theta1, theta2, theta3, theta4, theta5
                         currentConfig[8]+angleChange[5], currentConfig[9]+angleChange[6], currentConfig[10]+angleChange[7], currentConfig[11]+angleChange[8],                       # wheel positions: wheel1, wheel2, wheel3, wheel4
-                        currentConfig[12]])                                                                                                                                         # gripper state                    
+                        newGripperState])                                                                                                                                         # gripper state                    
     
     return newConfig
 
@@ -64,6 +64,8 @@ def write_to_csv(array, file_name):
         writer = csv.writer(file)
         writer.writerows(array)
 
+
+### UNCOMMENT CODE BELOW FOR TESTING ###
 
 # u1 = np.array([0, 0, 0, 0, 0, 10, 10, 10, 10])
 # u2 = np.array([0, 0, 0, 0, 0, -10, 10, -10, 10])
