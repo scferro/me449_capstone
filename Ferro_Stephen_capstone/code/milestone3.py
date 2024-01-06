@@ -25,11 +25,15 @@ def FeedbackControl(Tse, Tse_d, Tse_d_next, Tse_error_int, Kp_in=0, Ki_in=0, dt=
 
     # Calculate Tse error based on current and desired EE pose
     Tse_error = mr.se3ToVec(mr.MatrixLog6(mr.TransInv(Tse) @ Tse_d))
-    print(Tse_error)
+    #print(Tse_error)
 
     # Calculate EE twist
     Vd =  (1/dt) * mr.se3ToVec(mr.MatrixLog6((mr.TransInv(Tse_d) @ Tse_d_next)))
-    V_ee = (mr.Adjoint(mr.TransInv(Tse) @ Tse_d) @ Vd) + (Kp @ Tse_error) + (Ki @ Tse_error_int)
+    V_ee = (Kp @ Tse_error) + (Ki @ Tse_error_int) 
+
+    ### UNCOMMENT THE NEXT LINE TO ENABLE FEEDFORWARD CONTROL ###
+    V_ee = (Kp @ Tse_error) + (Ki @ Tse_error_int) + (mr.Adjoint(mr.TransInv(Tse) @ Tse_d) @ Vd)
+    #############################################################
 
     # Calculate new error integral
     Tse_error_int_new = Tse_error * dt + Tse_error_int
@@ -85,38 +89,55 @@ def CheckJointLimits(jointAngles, jointSpeeds, J, dt=0.01):
     """
     # Define joint limits
     limit1 = np.array([-np.pi/2, np.pi/2])
-    limit2 = np.array([-np.pi/2, 0.2])
-    limit3 = np.array([-np.pi/2, 0.2])
-    limit4 = np.array([-3*np.pi/4, 3*np.pi/4])
+    limit2 = np.array([-3*np.pi/4, np.pi/4])
+    limit3 = np.array([-3*np.pi/4, 0])
+    limit4 = np.array([-np.pi/2, 0])
     
     # Calculate the new joint angles using the current angles and speeds
     newAngles = jointAngles + (jointSpeeds * dt)
+    # print(jointAngles)
+    # print(newAngles)
+    # print(jointSpeeds)
+    # print(limit1)
+    # print(limit2)
+    # print(limit3)
+    # print(limit4)
+    # print()
 
     J_new_check = False
 
+    print(J)
+
     if (newAngles[0] > limit1[1]) or (newAngles[0] < limit1[0]):
-        for i in range(5):
+        print("Joint1")
+        for i in range(6):
                 J[i,4] = 0
                 J_new_check = True
     if (newAngles[1] > limit2[1]) or (newAngles[1] < limit2[0]):
-        for i in range(5):
+        print("Joint2")
+        for i in range(6):
                 J[i,5] = 0
                 J_new_check = True
     if (newAngles[2] > limit3[1]) or (newAngles[2] < limit3[0]):
-        for i in range(5):
+        print("Joint3")
+        for i in range(6):
                 J[i,6] = 0
                 J_new_check = True
     if (newAngles[3] > limit4[1]) or (newAngles[3] < limit4[0]):
-        for i in range(5):
+        print("Joint4")
+        for i in range(6):
                 J[i,7] = 0
                 J_new_check = True
+
+    print(J)
+    print()
 
     return J, J_new_check 
 
 
 
 
-### UNCOMMENT CODE BELOW FOR TESTING ###
+# ### UNCOMMENT CODE BELOW FOR TESTING ###
 
 # currentConfig = [0, 0, 0, 0, 0, 0.2, -1.6, 0, 0, 0, 0, 0]
 

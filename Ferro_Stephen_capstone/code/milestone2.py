@@ -18,7 +18,7 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
     """
 
     # Define standoff ans grasp Transformations relative to cube
-    angle_grasp = 2
+    angle_grasp = 2.5
     Tce_grasp = np.array([[np.cos(angle_grasp), 0, np.sin(angle_grasp), 0],
                         [0,1,0,0],
                         [-np.sin(angle_grasp),0,np.cos(angle_grasp),0],
@@ -26,7 +26,7 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
                         ])
     Tce_standoff = np.array([[0,0,1,0],
                         [0,1,0,0],
-                        [-1,0,0,0.5],
+                        [-1,0,0,0.4],
                         [0,0,0,1]
                         ])
 
@@ -41,7 +41,7 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
     Tse_grasp_final = Tsc_final @ Tce_grasp
     
     # Find the trajectory from the home position to the standoff from the cube at its initial position 
-    traj1 = extract_variables(mr.CartesianTrajectory(Tse_init, Tse_standoff_init, timeMove, numPoints, 5), 0)
+    traj1 = extract_variables(mr.CartesianTrajectory(Tse_init, Tse_standoff_init, 4*timeMove, 4*numPoints, 5), 0)
     # Find the trajectory from the standoff from the cube at its initial position to grasping the cube at its initial position
     traj2 = extract_variables(mr.CartesianTrajectory(Tse_standoff_init, Tse_grasp_init, timeMove, numPoints, 5), 0)
     # Close the gripper on the cube
@@ -55,7 +55,7 @@ def TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final, k=1):
     # Find the trajectory from the graps position to the initial standoff position
     traj4 = extract_variables(mr.CartesianTrajectory(Tse_grasp_init, Tse_standoff_init, timeMove, numPoints, 5), 1)
     # Find the trajectory from the initial standoff position to the final standoff position
-    traj5 = extract_variables(mr.CartesianTrajectory(Tse_standoff_init, Tse_standoff_final, timeMove, numPoints, 5), 1)
+    traj5 = extract_variables(mr.CartesianTrajectory(Tse_standoff_init, Tse_standoff_final, 4*timeMove, 4*numPoints, 5), 1)
     # Find the trajectory from the final standoff position to the final cube position
     traj6 = extract_variables(mr.CartesianTrajectory(Tse_standoff_final, Tse_grasp_final, timeMove, numPoints, 5), 1)
     # Release the cube
@@ -109,28 +109,27 @@ def write_to_csv(array, file_name):
 
 ### UNCOMMENT CODE BELOW FOR TESTING ###
 
-# Initialize Transformaations
+# # Initialize Transformaations
 
-Tse_init = np.array([[0,0,1,0],
-                    [0,1,0,0],
-                    [-1,0,0,0.5],
-                    [0,0,0,1]
-                    ])
-Tsc_init = np.array([[1,0,0,1],
-                    [0,1,0,0],
-                    [0,0,1,0.025],
-                    [0,0,0,1]
-                    ])
-Tsc_final = np.array([[0,1,0,0],
-                    [-1,0,0,-1],
-                    [0,0,1,0.025],
-                    [0,0,0,1]
-                    ])
+# Tse_init = np.array([[0,0,1,0],
+#                     [0,1,0,0],
+#                     [-1,0,0,0.5],
+#                     [0,0,0,1]
+#                     ])
+# Tsc_init = np.array([[1,0,0,1],
+#                     [0,1,0,0],
+#                     [0,0,1,0.025],
+#                     [0,0,0,1]
+#                     ])
+# Tsc_final = np.array([[0,1,0,0],
+#                     [-1,0,0,-1],
+#                     [0,0,1,0.025],
+#                     [0,0,0,1]
+#                     ])
 
-# Plan trajectory using TrajectoryGenerator() function
+# # Plan trajectory using TrajectoryGenerator() function
 
-traj = TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final)
-
-print(traj)
+# traj = TrajectoryGenerator(Tse_init, Tsc_init, Tsc_final)
+# write_to_csv(traj, "traj_test.csv")
     
 

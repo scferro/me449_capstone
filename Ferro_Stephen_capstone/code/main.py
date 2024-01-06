@@ -24,13 +24,13 @@ Tsc_final = np.array([[0, 1, 0, 0],
                     [0, 0, 1, 0.025],
                     [0, 0, 0, 1]
                     ])
-initial_config = np.array([0, -1, 0,
-                            0, 0, -1, -1, 0,
+initial_config = np.array([-1, -0.5, 0.2,
+                            0, -0.2, -0.6, -1.578, 0,
                             0, 0, 0, 0,
                             0])
 
-Kp = 0
-Ki = 0
+Kp = 25
+Ki = 0.1
 
 filename_traj = 'Ferro_Stephen_capstone_traj.csv'
 filename_error = 'Ferro_Stephen_capstone_error.csv'
@@ -115,7 +115,9 @@ while count < (max - 1):
     wheelSpeeds = speedCommands[0:4]
     jointSpeeds = speedCommands[4:]
 
+    ### UNCOMMENT BELOW TO ENABLE JOINT LIMIT DETECTION ###
     # CheckJointLimits and update Jacobian
+    J_new_check = False
     J_new, J_new_check = CheckJointLimits(config[3:8], jointSpeeds, J)
 
     # Calculate speed commands based on Jacobian and V_ee if joints are at limit
@@ -124,13 +126,13 @@ while count < (max - 1):
         wheelSpeeds = speedCommands[0:4]
         jointSpeeds = speedCommands[4:]
         J_new_check = False
+    #######################################################
 
     # Find the new robot configuration using NewState
     new_config = NextState(config, wheelSpeeds, jointSpeeds, Tse_vec_d[-1])
     config = new_config
 
     config_array = np.vstack((config_array, config))
-    print(Tse_error)
     Tse_error_array = np.vstack((Tse_error_array, Tse_error))
 
     count += 1
