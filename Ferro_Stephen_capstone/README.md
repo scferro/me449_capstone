@@ -1,4 +1,4 @@
-# ME449 Capstone Project
+# CoppeliaSim YouBot Simulation Project
 
 ## Author: 
 - Stephen Ferro
